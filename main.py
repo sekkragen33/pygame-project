@@ -4,8 +4,8 @@ import sys
 import pygame
 
 pygame.init()
-pygame.display.set_caption('Свой курсор мыши')
-size = WIDTH, HEIGHT = 1600, 900
+pygame.display.set_caption('Игра')
+size = WIDTH, HEIGHT = 920, 580
 screen = pygame.display.set_mode(size)
 
 
@@ -30,8 +30,6 @@ class Mouse(pygame.sprite.Sprite):
     image = load_image("cursor.png")
 
     def __init__(self, group):
-        # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
-        # Это очень важно !!!
         super().__init__(group)
         self.image = Mouse.image
         self.rect = self.image.get_rect()
@@ -40,7 +38,7 @@ class Mouse(pygame.sprite.Sprite):
 
 
 class Background(pygame.sprite.Sprite):
-    image = load_image('menu4.png')
+    image = pygame.transform.scale(load_image('menu4.png'), (WIDTH, HEIGHT))
 
     def __init__(self, group):
         super().__init__(group)
@@ -50,10 +48,28 @@ class Background(pygame.sprite.Sprite):
         self.rect.y = 0
 
 
+class Start(pygame.sprite.Sprite):
+    image1 = pygame.transform.scale(load_image('start1.png'), (WIDTH * 0.33, HEIGHT * 0.125))
+    image2 = pygame.transform.scale(load_image('start2.png'), (WIDTH * 0.33, HEIGHT * 0.125))
+
+    def __init__(self, group, a=0):
+        super().__init__(group)
+        if a == 0:
+            self.image = Start.image1
+        elif a == 1:
+            self.image = Start.image2
+        self.rect = self.image.get_rect()
+        self.rect.x = WIDTH * 0.33
+        self.rect.y = HEIGHT * 0.375
+
+
 if __name__ == '__main__':
-    all_sprites = pygame.sprite.Group()
-    background = Background(all_sprites)
-    mouse = Mouse(all_sprites)
+    fon_sprites = pygame.sprite.Group()
+    mouse_sprite = pygame.sprite.Group()
+    background = Background(fon_sprites)
+    mouse = Mouse(mouse_sprite)
+    start = Start(fon_sprites)
+    start_button = pygame.Rect(start.rect)
     pygame.mouse.set_visible(False)
     running = True
     while running:
@@ -63,8 +79,21 @@ if __name__ == '__main__':
                 running = False
             if event.type == pygame.MOUSEMOTION:
                 mouse.rect.x, mouse.rect.y = pygame.mouse.get_pos()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = event.pos
+                if start_button.collidepoint(mouse_pos):
+                    start.image = Start.image2
+            if event.type == pygame.MOUSEBUTTONUP:
+                mouse_pos = event.pos
+                if not start_button.collidepoint(mouse_pos):
+                    start.image = Start.image1
+                else:
+                    fon_sprites.remove(start)
+                    fon_sprites.remove(background)
+
+        fon_sprites.draw(screen)
         if pygame.mouse.get_focused():
-            all_sprites.draw(screen)
-            all_sprites.update()
+            mouse_sprite.draw(screen)
+            mouse_sprite.update()
         pygame.display.flip()
     pygame.quit()
